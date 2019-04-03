@@ -4,6 +4,10 @@ This is the reference implementation of the **Discord** platform for **Manebot**
 
 The support for the Discord Bot API is excellently and efficiently provided through **JDA**.
 
+## Manebot
+
+Manebot is a really neat plugin-based Java chatbot framework that allows you to write one "bot", and host it across several platforms. This plugin provides the **Discord** "*Platform*" to Manebot, which allows Manebot to seamlessly interact with Discord and provide all of the features your Manebot instance is set up to provide on Discord.
+
 ## Installation
 
 Manebot uses the **Maven** repository system to coordinate plugin and dependency installation. Because of this, you can easily install the Discord platform plugin without interacting with your filesystem at all.
