@@ -62,6 +62,8 @@ The **Discord** plugin requires the following plugins at least be *installed*. D
 This plugin supports the following essential Discord features:
 
 * Discord user system
+* Automatic user registration via the default user registration implementation
+* *Embeds*, those fancy boxes that you can throw fields, titles, footers, and thumbnails into.
 * Direct or private text channels
 * Guild text channels
 * Guild voice channels via the **audio** plugin's AudioChannel system
