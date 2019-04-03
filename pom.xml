@@ -18,6 +18,11 @@
             </snapshots>
         </repository>
         <repository>
+            <id>jcenter</id>
+            <name>jcenter-bintray</name>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
+        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
@@ -44,7 +49,11 @@
 
     <groupId>io.manebot.plugin</groupId>
     <artifactId>discord</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.1-SNAPSHOT</version>
+
+    <properties>
+        <jda.version>3.8.3_462</jda.version>
+    </properties>
 
     <build>
         <plugins>
@@ -63,14 +72,14 @@
         <dependency>
             <groupId>io.manebot</groupId>
             <artifactId>manebot-core</artifactId>
-            <version>0.1.6.1</version>
+            <version>0.1.6.2-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.manebot.plugin</groupId>
             <artifactId>audio</artifactId>
-            <version>0.1.9</version>
+            <version>0.1.9.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -81,9 +90,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.austinv11</groupId>
-            <artifactId>Discord4J</artifactId>
-            <version>3.0.1</version>
+            <groupId>com.discord4j</groupId>
+            <artifactId>stores-caffeine</artifactId>
+            <version>3.0.0</version>
         </dependency>
 
         <dependency>
@@ -96,6 +105,18 @@
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.11.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>${jda.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>club.minnced</groupId>
+                    <artifactId>opus-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

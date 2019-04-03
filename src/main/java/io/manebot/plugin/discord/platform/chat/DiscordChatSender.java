@@ -1,16 +1,14 @@
 package io.manebot.plugin.discord.platform.chat;
 
-
-
 import io.manebot.chat.DefaultChatSender;
 
 import io.manebot.plugin.discord.platform.DiscordPlatformUser;
 
 public class DiscordChatSender extends DefaultChatSender {
     private final DiscordPlatformUser user;
-    private final DiscordMessageChannel chat;
+    private final BaseDiscordChannel chat;
 
-    public DiscordChatSender(DiscordPlatformUser user, DiscordMessageChannel chat) {
+    public DiscordChatSender(DiscordPlatformUser user, BaseDiscordChannel chat) {
         super(user, chat);
 
         this.user = user;
@@ -23,7 +21,7 @@ public class DiscordChatSender extends DefaultChatSender {
     }
 
     @Override
-    public DiscordMessageChannel getChat() {
+    public BaseDiscordChannel getChat() {
         return chat;
     }
 }

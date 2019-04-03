@@ -3,15 +3,13 @@ package io.manebot.plugin.discord.platform.chat;
 import io.manebot.chat.ChatMessage;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
-import io.manebot.plugin.discord.platform.DiscordPlatformUser;
-import discord4j.core.object.entity.*;
+import net.dv8tion.jda.core.entities.PrivateChannel;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import java.util.Collections;
 
-public class DiscordPrivateChannel extends DiscordMessageChannel {
+public class DiscordPrivateChannel extends BaseDiscordChannel {
     private final PrivateChannel channel;
 
     public DiscordPrivateChannel(DiscordPlatformConnection platformConnection,
@@ -52,25 +50,19 @@ public class DiscordPrivateChannel extends DiscordMessageChannel {
     }
 
     @Override
-    public Collection<PlatformUser> getPlatformUsers() {
-        // Find all guild members who have access to view the channel
-        return channel.getRecipientIds().stream()
-                .map(id -> getPlatformConnection().getPlatformUser(id.asString()))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    public Collection<String> getPlatformUserIds() {
+        return Collections.unmodifiableCollection(Arrays.asList(
+                channel.getUser().getId(),
+                getPlatformConnection().getSelf().getId()
+        ));
     }
 
     @Override
-    public ChatMessage sendMessage(Consumer<ChatMessage.Builder> consumer) {
-        DiscordPlatformUser self = getPlatformConnection().getSelf();
-        return new DiscordChatMessage(
-                getPlatformConnection(),
-                new DiscordChatSender(self, this),
-                Objects.requireNonNull(
-                        channel.createMessage(builder ->
-                                consumer.accept(new DiscordChatMessage.CreateBuilder(self, this, builder))
-                        ).block()
-                )
-        );
+    public Collection<PlatformUser> getPlatformUsers() {
+        return Collections.unmodifiableCollection(Arrays.asList(
+                getPlatformConnection().getPlatformUser(channel.getUser()),
+                getPlatformConnection().getSelf()
+        ));
     }
+
 }

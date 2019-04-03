@@ -5,6 +5,7 @@ import io.manebot.database.Database;
 import io.manebot.platform.AbstractPlatformConnection;
 
 import io.manebot.platform.Platform;
+import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.Plugin;
 import io.manebot.plugin.PluginException;
 
@@ -12,26 +13,26 @@ import io.manebot.plugin.audio.AudioPlugin;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 
 import io.manebot.plugin.discord.platform.chat.*;
-import io.manebot.plugin.discord.platform.chat.*;
 import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
 import io.manebot.plugin.discord.platform.guild.GuildManager;
 import io.manebot.user.UserRegistration;
-import discord4j.core.DiscordClient;
-import discord4j.core.DiscordClientBuilder;
-import discord4j.core.event.domain.guild.GuildCreateEvent;
-import discord4j.core.event.domain.guild.GuildDeleteEvent;
-import discord4j.core.event.domain.lifecycle.DisconnectEvent;
-import discord4j.core.event.domain.lifecycle.ReadyEvent;
-import discord4j.core.event.domain.lifecycle.ResumeEvent;
-import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.*;
-import discord4j.core.object.util.Snowflake;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.ReadyEvent;
+import net.dv8tion.jda.core.events.guild.GuildAvailableEvent;
+import net.dv8tion.jda.core.events.guild.GuildUnavailableEvent;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import javax.security.auth.login.LoginException;
 import java.util.*;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
+
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class DiscordPlatformConnection extends AbstractPlatformConnection {
     private final Platform platform;
@@ -43,7 +44,7 @@ public class DiscordPlatformConnection extends AbstractPlatformConnection {
     private final Map<String, DiscordGuildConnection> guildConnections = new LinkedHashMap<>();
 
     private AudioPlugin audioPlugin;
-    private DiscordClient client;
+    private JDA client;
 
     public DiscordPlatformConnection(Platform platform,
                                      Plugin plugin,
@@ -62,12 +63,12 @@ public class DiscordPlatformConnection extends AbstractPlatformConnection {
     }
 
     private DiscordGuildConnection createGuildConnection(Guild connection) {
-        DiscordGuild guild = guildManager.getOrCreateGuild(connection.getId().asString());
+        DiscordGuild guild = guildManager.getOrCreateGuild(connection.getId());
         return new DiscordGuildConnection(plugin, guild, connection, this, getAudioPlugin());
     }
 
     private DiscordGuildConnection getGuildConnection(String id) {
-        Guild guild = client.getGuildById(Snowflake.of(id)).block();
+        Guild guild = client.getGuildById(id);
         if (guild == null) throw new IllegalArgumentException("Unknown guild: " + id);
         return guildConnections.computeIfAbsent(id, key -> createGuildConnection(guild));
     }
@@ -78,107 +79,80 @@ public class DiscordPlatformConnection extends AbstractPlatformConnection {
     public void connect() throws PluginException {
         audioPlugin = audio.getInstance(AudioPlugin.class);
 
-        client = new DiscordClientBuilder(plugin.requireProperty("token"))
-                .setShardCount(Integer.parseInt(plugin.getProperty("shards", "1")))
-                .build();
-
-        client.getEventDispatcher()
-                .on(DisconnectEvent.class)
-                .subscribe(
-                        event -> {
-                            Iterator<Map.Entry<String, DiscordGuildConnection>> connectionIterator =
-                                    guildConnections.entrySet().iterator();
-
-                            while (connectionIterator.hasNext()) {
-                                try {
-                                    connectionIterator.next().getValue().unregister();
-                                } catch (Exception ex) {
-                                    plugin.getLogger().log(Level.WARNING, "Problem disconnecting from guild", ex);
-                                }
-
-                                connectionIterator.remove();
-                            }
-                        },
-                        error -> plugin.getLogger().log(Level.WARNING, "Problem handling Discord disconnect event", error)
-                );
-
-        client.getEventDispatcher()
-                .on(ResumeEvent.class)
-                .subscribe(
-                        event -> { },
-                        error -> plugin.getLogger().log(Level.WARNING, "Problem handling Discord guild creation", error)
-                );
-
-        client.getEventDispatcher()
-                .on(GuildCreateEvent.class)
-                .subscribe(event -> {
-                    try {
-                        createGuildConnection(event.getGuild()).register();
-                    } catch (Throwable e) {
-                        plugin.getLogger().log(Level.WARNING, "Problem registering guild connection", e);
-                    }
-                }, error -> plugin.getLogger().log(Level.WARNING, "Problem handling Discord guild creation", error));
-
-        client.getEventDispatcher()
-                .on(MessageCreateEvent.class)
-                .parallel()
-                .subscribe(event -> {
-                    try {
-                        Optional<User> author = event.getMessage().getAuthor();
-                        if (!author.isPresent()) return;
-
-                        DiscordPlatformUser user = (DiscordPlatformUser)
-                                getPlatformUser(author.get().getId().asString());
-
-                        DiscordMessageChannel chat = (DiscordMessageChannel)
-                                getChat(event.getMessage().getChannelId().asString());
-
-                        DiscordChatSender chatSender = new DiscordChatSender(user, chat);
-
-                        DiscordChatMessage chatMessage = new DiscordChatMessage(
-                                this,
-                                chatSender,
-                                event.getMessage()
-                        );
-
-                        plugin.getBot().getChatDispatcher().executeAsync(chatMessage);
-                    } catch (Throwable e) {
-                        plugin.getLogger().log(Level.WARNING, "Problem handling Discord message", e);
-                    }
-                });
-
-        client.getEventDispatcher()
-                .on(GuildDeleteEvent.class)
-                .subscribe(event -> {
-                    try {
-                        String id = event.getGuildId().asString();
-                        DiscordGuildConnection connection = guildConnections.get(id);
-                        if (connection != null)
-                            guildConnections.remove(id).unregister();
-                    } catch (Throwable e) {
-                        plugin.getLogger().log(Level.WARNING, "Problem registering guild connection", e);
-                    }
-                }, error -> plugin.getLogger().log(Level.WARNING, "Problem registering guild connection", error));
-
-        final CompletableFuture<Boolean> readyFuture = new CompletableFuture<>();
-
-        client.getEventDispatcher()
-                .on(ReadyEvent.class)
-                .subscribe(event -> {
-                    User self = event.getSelf();
-
-                    plugin.getLogger().info(
-                            "Discord connected as " + self.getUsername() + "#" + self.getDiscriminator() + "."
-                    );
-
-                    readyFuture.complete(true);
-                }, error -> plugin.getLogger().log(Level.WARNING, "Problem handling Discord guild creation", error));
-
-        client.login().subscribe((v) -> {});
+        Logger.getLogger("discord4j.rest").setLevel(Level.FINEST);
 
         try {
-            readyFuture.get(30, TimeUnit.SECONDS);
-        } catch (Exception e) {
+            client = new JDABuilder(plugin.requireProperty("token"))
+                    .useSharding(
+                            Integer.parseInt(plugin.getProperty("shardId", "0")),
+                            Integer.parseInt(plugin.getProperty("totalShards", "1"))
+                    )
+                    .setCallbackPool(Executors.newCachedThreadPool(), true)
+                    .setAudioEnabled(Boolean.parseBoolean(plugin.getProperty("audio", "true")))
+                    .setAutoReconnect(Boolean.parseBoolean(plugin.getProperty("autoReconnect", "true")))
+                    .setCorePoolSize(Integer.parseInt(plugin.getProperty("poolSize", "5")))
+                    .setMaxReconnectDelay(Integer.parseInt(plugin.getProperty("maxReconnectDelay", "900")))
+                    .setIdle(Boolean.parseBoolean(plugin.getProperty("idle", "false")))
+                    .setCompressionEnabled(Boolean.parseBoolean(plugin.getProperty("compression", "true")))
+                    .addEventListener(new ListenerAdapter() {
+                        @Override
+                        public void onReady(ReadyEvent event) {
+                            plugin.getLogger().info(
+                                    "Connected to discord as " +
+                                    event.getJDA().getSelfUser().getName() + "."
+                            );
+                        }
+
+                        @Override
+                        public void onMessageReceived(MessageReceivedEvent event) {
+                            try {
+                                User author = event.getMessage().getAuthor();
+
+                                if (author.isBot()) return;
+
+                                DiscordPlatformUser user = (DiscordPlatformUser)
+                                        getPlatformUser(author.getId());
+
+                                BaseDiscordChannel chat = getChat(event.getMessage().getChannel());
+
+                                DiscordChatSender chatSender = new DiscordChatSender(user, chat);
+
+                                DiscordChatMessage chatMessage = new DiscordChatMessage(
+                                        DiscordPlatformConnection.this,
+                                        chatSender,
+                                        event.getMessage()
+                                );
+
+                                plugin.getBot().getChatDispatcher().executeAsync(chatMessage);
+                            } catch (Throwable e) {
+                                plugin.getLogger().log(Level.WARNING, "Problem handling Discord message", e);
+                            }
+                        }
+
+                        @Override
+                        public void onGuildAvailable(GuildAvailableEvent event) {
+                            try {
+                                createGuildConnection(event.getGuild()).register();
+                            } catch (Throwable e) {
+                                plugin.getLogger().log(Level.WARNING, "Problem registering guild connection", e);
+                            }
+                        }
+
+                        @Override
+                        public void onGuildUnavailable(GuildUnavailableEvent event) {
+                            try {
+                                DiscordGuildConnection connection = guildConnections.remove(event.getGuild().getId());
+                                if (connection != null) connection.unregister();
+                            } catch (Throwable e) {
+                                plugin.getLogger().log(Level.WARNING, "Problem unregistering guild connection", e);
+                            }
+                        }
+                    })
+                    .build()
+                    .awaitReady();
+        } catch (LoginException e) {
+            throw new PluginException("Failed to login to Discord", e);
+        } catch (InterruptedException e) {
             throw new PluginException(e);
         }
 
@@ -187,9 +161,6 @@ public class DiscordPlatformConnection extends AbstractPlatformConnection {
 
     @Override
     public void disconnect() {
-        if (client.isConnected())
-            client.logout().block();
-
         Iterator<Map.Entry<String, DiscordGuildConnection>> connectionIterator =
                 guildConnections.entrySet().iterator();
 
@@ -198,56 +169,91 @@ public class DiscordPlatformConnection extends AbstractPlatformConnection {
             connectionIterator.remove();
         }
 
+        client.shutdownNow();
+
         plugin.getLogger().info("Discord platform disconnected.");
     }
 
     // JBot accessors ==================================================================================================
 
-    @Override
-    protected DiscordPlatformUser loadUserById(String id) {
-        User user = client.getUserById(Snowflake.of(id)).block();
+    private DiscordPlatformUser loadUser(User user) {
+        Objects.requireNonNull(user);
         return new DiscordPlatformUser(this, user);
     }
 
     @Override
-    protected Chat loadChatById(String id) {
-        Channel channel = client.getChannelById(Snowflake.of(id)).block();
-        if (channel == null) return null;
+    protected DiscordPlatformUser loadUserById(String id) {
+        return loadUser(client.getUserById(id));
+    }
+
+    private Chat loadChat(MessageChannel channel) {
+        Objects.requireNonNull(channel);
 
         if (channel instanceof TextChannel) {
             return new DiscordGuildChannel(this, (TextChannel) channel);
         } else if (channel instanceof PrivateChannel) {
             return new DiscordPrivateChannel(this, (PrivateChannel) channel);
         } else
-            return null;
+            throw new UnsupportedOperationException("Unsupported channel class: " + channel.getClass().getName());
+    }
+
+    @Override
+    protected Chat loadChatById(String id) {
+        return loadChat(client.getTextChannelById(id));
+    }
+
+
+    public DiscordPlatformUser getPlatformUser(User user) {
+        return (DiscordPlatformUser) super.getCachedUserById(user.getId(), (key) -> loadUser(user));
+    }
+
+    public BaseDiscordChannel getChat(MessageChannel chat) {
+        return (BaseDiscordChannel) super.getCachedChatById(chat.getId(), (key) -> loadChat(chat));
     }
 
     @Override
     public DiscordPlatformUser getSelf() {
-        User user = client.getSelf().block();
-        if (user == null) return null;
-        return (DiscordPlatformUser) getPlatformUser(user.getId().asString());
+        return getPlatformUser(client.getSelfUser());
+    }
+
+    @Override
+    public Collection<PlatformUser> getPlatformUsers() {
+        return Collections.unmodifiableCollection(
+                client.getUsers()
+                        .stream()
+                        .map(this::getPlatformUser)
+                        .collect(Collectors.toList())
+        );
     }
 
     @Override
     public Collection<String> getPlatformUserIds() {
-        return client
-                .getUsers().map(user -> user.getId().asString())
-                .collectList()
-                .blockOptional()
-                .orElseThrow(() -> new IllegalArgumentException("Failed to obtain user list"));
+        return Collections.unmodifiableCollection(
+                client.getUsers()
+                .stream()
+                .map(ISnowflake::getId)
+                .collect(Collectors.toList())
+        );
     }
 
     @Override
     public Collection<String> getChatIds() {
-        return client.getServiceMediator()
-                .getStateHolder()
-                .getTextChannelStore()
-                .entries()
-                .map(channelBean -> Long.toUnsignedString(channelBean.getT2().getId()))
-                .collectList()
-                .blockOptional()
-                .orElseThrow(() -> new IllegalArgumentException("Failed to obtain channel list"));
+        return Collections.unmodifiableCollection(
+                client.getTextChannels()
+                        .stream()
+                        .map(ISnowflake::getId)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    @Override
+    public Collection<Chat> getChats() {
+        return Collections.unmodifiableCollection(
+                client.getTextChannels()
+                        .stream()
+                        .map(this::getChat)
+                        .collect(Collectors.toList())
+        );
     }
 
     @Override

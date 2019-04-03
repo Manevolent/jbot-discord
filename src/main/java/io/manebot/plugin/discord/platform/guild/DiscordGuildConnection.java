@@ -1,6 +1,7 @@
 package io.manebot.plugin.discord.platform.guild;
 
 import io.manebot.conversation.Conversation;
+import io.manebot.platform.Platform;
 import io.manebot.plugin.Plugin;
 import io.manebot.plugin.audio.AudioPlugin;
 import io.manebot.plugin.audio.channel.AudioChannel;
@@ -12,13 +13,17 @@ import io.manebot.plugin.discord.audio.channel.DiscordAudioChannel;
 import io.manebot.plugin.discord.audio.channel.DiscordMixerSink;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
-import io.manebot.plugin.discord.platform.DiscordPlatformUser;
+
 import io.manebot.user.User;
 import io.manebot.user.UserAssociation;
 import io.manebot.virtual.Virtual;
-import discord4j.core.object.entity.Guild;
-import discord4j.core.object.entity.Member;
-import discord4j.core.object.util.Snowflake;
+import net.dv8tion.jda.core.audio.AudioReceiveHandler;
+import net.dv8tion.jda.core.audio.CombinedAudio;
+import net.dv8tion.jda.core.audio.UserAudio;
+import net.dv8tion.jda.core.audio.hooks.ConnectionListener;
+import net.dv8tion.jda.core.audio.hooks.ConnectionStatus;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.managers.AudioManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,18 +61,28 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
         this.audioPlugin = audioPlugin;
     }
 
+    public Platform getPlatform() {
+        return connection.getPlatform();
+    }
+
+    public String getId() {
+        return guild.getId();
+    }
+
     public DiscordAudioChannel getAudioChannel() {
         return channel;
     }
 
-    public DiscordMixerSink getMixerSink() { return mixerSink; }
-
-    public String getStringID() {
-        return guild.getId().asString();
+    public DiscordMixerSink getMixerSink() {
+        return mixerSink;
     }
 
     public DiscordPlatformConnection getPlatformConnection() {
         return connection;
+    }
+
+    public Guild getGuild() {
+        return guild;
     }
 
     public void register() throws Exception {
@@ -75,7 +90,7 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
             if (registered) return;
 
             plugin.getLogger().fine("Connecting to guild \"" + guild.getName()
-                    + "\" [" + guild.getId().asString() + "] ...");
+                    + "\" [" + getId() + "] ...");
 
             // Initialize audio subsystem for this guild.
             if (guildModel.isMusicEnabled()) {
@@ -100,10 +115,52 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
                     mixer = null;
                 }
 
-                // Create mixer around the sink
-                mixer = audioPlugin.createMixer("discord:" + guild.getId().asString(), mixerSink);
+                // Create mixer around the sink and audio channel around the mixer
+                mixer = audioPlugin.createMixer("discord:" + getId(), mixerSink);
+                audioPlugin.registerChannel(channel = new DiscordAudioChannel(this, mixer, this));
 
-                audioPlugin.registerChannel(channel = new DiscordAudioChannel(this, mixer, mixerSink.getProvider(), this));
+                AudioManager audioManager = guild.getAudioManager();
+
+                audioManager.setSendingHandler(mixerSink);
+
+                audioManager.setConnectionListener(new ConnectionListener() {
+                    @Override
+                    public void onPing(long ping) {
+
+                    }
+
+                    @Override
+                    public void onStatusChange(ConnectionStatus connectionStatus) {
+
+                    }
+
+                    @Override
+                    public void onUserSpeaking(net.dv8tion.jda.core.entities.User user, boolean speaking) {
+
+                    }
+                });
+
+                audioManager.setReceivingHandler(new AudioReceiveHandler() {
+                    @Override
+                    public boolean canReceiveCombined() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean canReceiveUser() {
+                        return true;
+                    }
+
+                    @Override
+                    public void handleCombinedAudio(CombinedAudio combinedAudio) {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public void handleUserAudio(UserAudio userAudio) {
+                        //TODO
+                    }
+                });
 
                 channel.setIdle(true);
             } else {
@@ -113,7 +170,7 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
             this.registered = true;
 
             plugin.getLogger().info("Connected to guild \"" + guild.getName()
-                    + "\" [" + guild.getId().asString() + "].");
+                    + "\" [" + getId() + "].");
         }
     }
 
@@ -123,7 +180,7 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
 
             try {
                 plugin.getLogger().fine("Disconnecting from guild \"" + guild.getName()
-                        + "\" [" + guild.getId().asString() + "] ...");
+                        + "\" [" + getId() + "] ...");
 
                 // Deconstruct audio system
                 if (channel != null) {
@@ -143,7 +200,7 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
             }
 
             plugin.getLogger().fine("Disconnected from guild \"" + guild.getName()
-                    + "\" [" + guild.getId().asString() + "].");
+                    + "\" [" + getId() + "].");
         }
     }
 
@@ -169,10 +226,6 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
 
     public Conversation getDefaultConversation() {
         return guildModel.getDefaultConversation();
-    }
-
-    public User resolveUser(User user) {
-        throw new UnsupportedOperationException();
     }
 
     public List<User> getListeners() {
@@ -215,9 +268,6 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
         schedule();
     }
 
-    public Member getMember(DiscordPlatformUser platformUser) {
-        return guild.getMemberById(Snowflake.of(platformUser.getId())).block();
-    }
 
     private class Sleeper implements Runnable {
         private final long sleepTime;

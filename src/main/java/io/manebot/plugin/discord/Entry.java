@@ -16,7 +16,7 @@ public final class Entry implements PluginEntry {
         // Require audio
         builder.type(PluginType.FEATURE);
         final Plugin audioPlugin =
-                builder.requirePlugin(ManifestIdentifier.fromString("io.manebot-audio"));
+                builder.requirePlugin(ManifestIdentifier.fromString("io.manebot.plugin:audio"));
 
         // Discord Database
         final Database database = builder.database("discord", modelConstructor -> modelConstructor

@@ -4,8 +4,8 @@ import io.manebot.chat.Chat;
 import io.manebot.platform.Platform;
 import io.manebot.platform.PlatformConnection;
 import io.manebot.platform.PlatformUser;
-import discord4j.core.object.entity.PrivateChannel;
-import discord4j.core.object.entity.User;
+import net.dv8tion.jda.core.entities.PrivateChannel;
+import net.dv8tion.jda.core.entities.User;
 
 import java.util.Collection;
 
@@ -34,12 +34,12 @@ public class DiscordPlatformUser implements PlatformUser {
 
     @Override
     public String getId() {
-        return user.getId().asString();
+        return user.getId();
     }
 
     @Override
     public String getNickname() {
-        return user.getUsername();
+        return user.getName();
     }
 
     @Override
@@ -69,9 +69,10 @@ public class DiscordPlatformUser implements PlatformUser {
 
     @Override
     public Chat getPrivateChat() {
-        PrivateChannel privateChannel = user.getPrivateChannel().block();
+        PrivateChannel privateChannel = user.openPrivateChannel().complete();
         if (privateChannel == null) return null;
-        return connection.getChat(privateChannel.getId().asString());
+
+        return connection.getChat(privateChannel);
     }
 
     @Override
