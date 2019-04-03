@@ -8,6 +8,14 @@ The support for the Discord Bot API is excellently and efficiently provided thro
 
 Manebot is a really neat plugin-based Java chatbot framework that allows you to write one "bot", and host it across several platforms. This plugin provides the **Discord** "*Platform*" to Manebot, which allows Manebot to seamlessly interact with Discord and provide all of the features your Manebot instance is set up to provide on Discord.
 
+#### How do I make a bot with this?
+
+You don't have to do anything specifically to make a bot for Discord with Manebot; the objective of Manebot is to act as middleware, abstracting the Discord platform away from you as a developer and to provide you a platform-agnostic API to seamlessly port (or simoultaneously host) your bot in other platforms, such as Slack.
+
+In summary, simply follow the guides on making a bot with Manebot, and just install Discord when you're ready to test that platform!
+
+In its conceptual phase, Manebot's Chat interaction API was designed around Discord's feature set, so Discord is well-supported.
+
 ## Installation
 
 Manebot uses the **Maven** repository system to coordinate plugin and dependency installation. Because of this, you can easily install the Discord platform plugin without interacting with your filesystem at all.
@@ -64,6 +72,7 @@ This plugin supports the following essential Discord features:
 * Discord user system
 * Automatic user registration via the default user registration implementation
 * *Embeds*, those fancy boxes that you can throw fields, titles, footers, and thumbnails into.
+* *Markdown* text (bold, italics, inline or block code, underline, strikethrough, etc.)
 * Direct or private text channels
 * Guild text channels
 * Guild voice channels via the **audio** plugin's AudioChannel system
