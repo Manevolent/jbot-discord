@@ -73,7 +73,7 @@ This plugin supports the following essential Discord features:
 * Automatic user registration via the default user registration implementation
 * *Embeds*, those fancy boxes that you can throw fields, titles, footers, and thumbnails into.
 * *Markdown* text (bold, italics, inline or block code, underline, strikethrough, etc.)
-* Soft handling of unsupported API calls. Don't worry, if your plugins make an API call that Discord doesn't support, we'll do our best to handle it 👀
+* Soft handling of unsupported API calls. Don't worry, if your plugins make an API call that Discord doesn't support, we'll do our best to handle it... or, in a "let's not, but say we did" kind of way, hide our embarassment 👀
 * Direct or private text channels
 * Guild text channels
 * Guild voice channels via the **audio** plugin's AudioChannel system
