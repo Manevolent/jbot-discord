@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -52,16 +53,16 @@ public abstract class BaseDiscordChannel implements Chat {
     }
 
     @Override
-    public ChatMessage sendMessage(Consumer<ChatMessage.Builder> consumer) {
+    public Collection<ChatMessage> sendMessage(Consumer<ChatMessage.Builder> consumer) {
         net.dv8tion.jda.core.MessageBuilder builder = new net.dv8tion.jda.core.MessageBuilder();
         consumer.accept(new DiscordChatMessage.MessageBuilder(getPlatformConnection().getSelf(), this, builder));
         Message createdMessage = channel.sendMessage(builder.build()).complete();
 
-        return new DiscordChatMessage(
+        return Collections.singletonList(new DiscordChatMessage(
                 getPlatformConnection(),
                 new DiscordChatSender(getPlatformConnection().getSelf(), this),
                 createdMessage
-        );
+        ));
     }
 
     @Override

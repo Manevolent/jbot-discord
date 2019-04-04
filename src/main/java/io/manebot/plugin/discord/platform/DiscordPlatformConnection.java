@@ -97,6 +97,18 @@ public class DiscordPlatformConnection extends AbstractPlatformConnection {
                     .addEventListener(new ListenerAdapter() {
                         @Override
                         public void onReady(ReadyEvent event) {
+                            for (Guild guild : event.getJDA().getGuilds()) {
+                                try {
+                                    createGuildConnection(guild).register();
+                                } catch (Exception e) {
+                                    plugin.getLogger().log(
+                                            Level.WARNING,
+                                            "Problem registering guild " + guild.getId(),
+                                            e
+                                    );
+                                }
+                            }
+
                             plugin.getLogger().info(
                                     "Connected to discord as " +
                                     event.getJDA().getSelfUser().getName() + "."
@@ -254,11 +266,6 @@ public class DiscordPlatformConnection extends AbstractPlatformConnection {
                         .map(this::getChat)
                         .collect(Collectors.toList())
         );
-    }
-
-    @Override
-    public UserRegistration getUserRegistration() {
-        return plugin.getBot().getDefaultUserRegistration();
     }
 
     public AudioPlugin getAudioPlugin() {
