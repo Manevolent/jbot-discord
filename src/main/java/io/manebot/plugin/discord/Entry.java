@@ -12,35 +12,30 @@ import io.manebot.plugin.java.PluginEntry;
 
 public final class Entry implements PluginEntry {
     @Override
-    public Plugin instantiate(Plugin.Builder builder) throws PluginLoadException {
+    public void instantiate(Plugin.Builder builder) throws PluginLoadException {
         // Require audio
-        builder.type(PluginType.FEATURE);
+        builder.setType(PluginType.FEATURE);
         final Plugin audioPlugin =
                 builder.requirePlugin(ManifestIdentifier.fromString("io.manebot.plugin:audio"));
 
         // Discord Database
-        final Database database = builder.database("discord", modelConstructor -> modelConstructor
-                .depend(modelConstructor.getSystemDatabase())
+        final Database database = builder.addDatabase("discord", modelConstructor -> modelConstructor
+                .addDependency(modelConstructor.getSystemDatabase())
                 .registerEntity(DiscordGuild.class)
-                .define()
         );
 
         // GuildManager database object manager
-        builder.instance(GuildManager.class, constructor -> new GuildManager(database));
+        builder.setInstance(GuildManager.class, constructor -> new GuildManager(database));
 
         // Set up Discord platform
-        builder.platform(platformBuilder -> platformBuilder
-                .withId("discord").withName("Discord")
-                .withConnection(new DiscordPlatformConnection(
+        builder.addPlatform(platformBuilder -> platformBuilder
+                .setId("discord").setName("Discord")
+                .setConnection(new DiscordPlatformConnection(
                         platformBuilder.getPlatform(),
                         platformBuilder.getPlugin(),
                         audioPlugin,
                         database
                 ))
-                .build()
         );
-
-        // Commands
-        return builder.build();
     }
 }
