@@ -1,8 +1,8 @@
 package io.manebot.plugin.discord.platform.chat;
 
-import io.manebot.chat.ChatMessage;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
+import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.util.Collection;
@@ -16,6 +16,10 @@ public class DiscordGuildChannel extends BaseDiscordChannel {
         super(platformConnection, textChannel);
 
         this.channel = textChannel;
+    }
+
+    public DiscordGuildConnection getGuildConnection() {
+        return getPlatformConnection().getGuildConnection(channel.getGuild());
     }
 
     @Override

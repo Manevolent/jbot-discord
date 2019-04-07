@@ -10,8 +10,8 @@ import io.manebot.plugin.audio.channel.AudioChannelRegistrant;
 import io.manebot.plugin.audio.mixer.Mixer;
 import io.manebot.plugin.audio.opus.OpusParameters;
 import io.manebot.plugin.audio.player.AudioPlayer;
-import io.manebot.plugin.discord.audio.channel.DiscordAudioChannel;
-import io.manebot.plugin.discord.audio.channel.DiscordMixerSink;
+import io.manebot.plugin.discord.audio.DiscordAudioChannel;
+import io.manebot.plugin.discord.audio.DiscordMixerSink;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
 
@@ -90,6 +90,10 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
         return guild;
     }
 
+    public boolean isRegistered() {
+        return registered;
+    }
+
     public void register() throws Exception {
         synchronized (registerLock) {
             if (registered) return;
@@ -99,10 +103,12 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
 
             // Initialize audio subsystem for this guild.
             if (guildModel.isMusicEnabled()) {
+                plugin.getLogger().fine("Registering audio mixer for guild \"" + guild.getName()
+                        + "\" [" + getId() + "] ...");
+
                 // Deconstruct audio system
                 if (channel != null) {
                     channel.disconnect();
-
                     audioConnection.unregisterChannel(channel);
                     channel = null;
                 }
@@ -124,56 +130,61 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
                     mixer.addSink(mixerSink = new DiscordMixerSink(
                             DiscordMixerSink.AUDIO_FORMAT,
                             OpusParameters.fromPluginConfiguration(plugin),
-                            mixer.getBufferSize()
+                            mixer.getBufferSize() * (DiscordMixerSink.AUDIO_FORMAT.getSampleSizeInBits()/8)
                     ));
 
                     audioConnection.registerChannel(channel = new DiscordAudioChannel(this, mixer, this));
-                }
 
-                AudioManager audioManager = guild.getAudioManager();
+                    AudioManager audioManager = guild.getAudioManager();
 
-                audioManager.setSendingHandler(mixerSink);
+                    audioManager.setSendingHandler(mixerSink);
 
-                audioManager.setConnectionListener(new ConnectionListener() {
-                    @Override
-                    public void onPing(long ping) {
+                    audioManager.setConnectionListener(new ConnectionListener() {
+                        @Override
+                        public void onPing(long ping) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onStatusChange(ConnectionStatus connectionStatus) {
+                        @Override
+                        public void onStatusChange(ConnectionStatus connectionStatus) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onUserSpeaking(net.dv8tion.jda.core.entities.User user, boolean speaking) {
+                        @Override
+                        public void onUserSpeaking(net.dv8tion.jda.core.entities.User user, boolean speaking) {
 
-                    }
-                });
+                        }
+                    });
 
-                audioManager.setReceivingHandler(new AudioReceiveHandler() {
-                    @Override
-                    public boolean canReceiveCombined() {
-                        return false;
-                    }
+                    audioManager.setReceivingHandler(new AudioReceiveHandler() {
+                        @Override
+                        public boolean canReceiveCombined() {
+                            return false;
+                        }
 
-                    @Override
-                    public boolean canReceiveUser() {
-                        return true;
-                    }
+                        @Override
+                        public boolean canReceiveUser() {
+                            return true;
+                        }
 
-                    @Override
-                    public void handleCombinedAudio(CombinedAudio combinedAudio) {
-                        throw new UnsupportedOperationException();
-                    }
+                        @Override
+                        public void handleCombinedAudio(CombinedAudio combinedAudio) {
+                            throw new UnsupportedOperationException();
+                        }
 
-                    @Override
-                    public void handleUserAudio(UserAudio userAudio) {
-                        //TODO
-                    }
-                });
+                        @Override
+                        public void handleUserAudio(UserAudio userAudio) {
+                            //TODO
+                        }
+                    });
 
-                channel.setIdle(true);
+                    channel.setIdle(true);
+
+                    plugin.getLogger().fine("Registered audio mixer for guild \"" + guild.getName()
+                            + "\" [" + getId() + "].");
+                } else
+                    plugin.getLogger().warning("Couldn't register audio for guild ["
+                            + getId() + "] because audio was not initialized.");
             } else {
                 channel = null;
             }
@@ -190,7 +201,7 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
             if (!registered) return;
 
             try {
-                plugin.getLogger().fine("Disconnecting from guild \"" + guild.getName()
+                plugin.getLogger().info("Disconnecting from guild \"" + guild.getName()
                         + "\" [" + getId() + "] ...");
 
                 // Deconstruct audio system
@@ -210,7 +221,7 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
                 this.registered = false;
             }
 
-            plugin.getLogger().fine("Disconnected from guild \"" + guild.getName()
+            plugin.getLogger().info("Disconnected from guild \"" + guild.getName()
                     + "\" [" + getId() + "].");
         }
     }

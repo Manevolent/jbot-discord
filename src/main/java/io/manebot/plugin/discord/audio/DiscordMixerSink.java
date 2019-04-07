@@ -1,4 +1,4 @@
-package io.manebot.plugin.discord.audio.channel;
+package io.manebot.plugin.discord.audio;
 
 import io.manebot.plugin.audio.mixer.output.AbstractOpusMixerSink;
 import io.manebot.plugin.audio.opus.OpusParameters;

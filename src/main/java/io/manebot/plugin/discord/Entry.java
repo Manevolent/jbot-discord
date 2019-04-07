@@ -7,6 +7,7 @@ import io.manebot.plugin.PluginLoadException;
 import io.manebot.plugin.PluginType;
 import io.manebot.plugin.audio.Audio;
 import io.manebot.plugin.audio.api.AudioRegistration;
+import io.manebot.plugin.discord.command.DiscordCommand;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 import io.manebot.plugin.discord.platform.guild.GuildManager;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
@@ -43,9 +44,9 @@ public final class Entry implements PluginEntry {
             }
 
             Audio audio;
-            if (audioPlugin != null)
+            if (audioPlugin != null) {
                 audio = audioPlugin.getInstance(Audio.class);
-            else
+            } else
                 audio = null;
 
             final DiscordPlatformConnection platformConnection = new DiscordPlatformConnection(
@@ -66,5 +67,7 @@ public final class Entry implements PluginEntry {
 
             platformBuilder.setConnection(platformConnection);
         });
+
+        builder.addCommand("discord", future -> new DiscordCommand(future.getPlugin()));
     }
 }

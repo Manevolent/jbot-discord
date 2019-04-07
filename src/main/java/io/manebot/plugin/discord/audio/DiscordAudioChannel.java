@@ -1,4 +1,4 @@
-package io.manebot.plugin.discord.audio.channel;
+package io.manebot.plugin.discord.audio;
 
 import io.manebot.conversation.Conversation;
 import io.manebot.platform.Platform;

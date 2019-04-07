@@ -18,6 +18,7 @@ import io.manebot.plugin.discord.database.model.DiscordGuild;
 import io.manebot.plugin.discord.platform.chat.*;
 import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
 import io.manebot.plugin.discord.platform.guild.GuildManager;
+import io.manebot.virtual.Virtual;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
@@ -56,6 +57,7 @@ public class DiscordPlatformConnection
         this.audioConnection = new DiscordAudioConnection(audio);
 
         this.audio = audio;
+
         this.platform = platform;
         this.plugin = plugin;
         this.guildManager = plugin.getInstance(GuildManager.class);
@@ -74,13 +76,13 @@ public class DiscordPlatformConnection
         return new DiscordGuildConnection(plugin, guild, connection, this, audio, audioConnection);
     }
 
-    private DiscordGuildConnection getGuildConnection(String id) {
+    public DiscordGuildConnection getGuildConnection(String id) {
         Guild guild = client.getGuildById(id);
         if (guild == null) throw new IllegalArgumentException("Unknown guild: " + id);
         return getGuildConnection(guild);
     }
 
-    private DiscordGuildConnection getGuildConnection(Guild guild) {
+    public DiscordGuildConnection getGuildConnection(Guild guild) {
         return guildConnections.computeIfAbsent(guild.getId(), key -> createGuildConnection(guild));
     }
 
@@ -110,7 +112,7 @@ public class DiscordPlatformConnection
                         public void onReady(ReadyEvent event) {
                             for (Guild guild : event.getJDA().getGuilds()) {
                                 try {
-                                    createGuildConnection(guild).register();
+                                    getGuildConnection(guild).register();
                                 } catch (Exception e) {
                                     plugin.getLogger().log(
                                             Level.WARNING,
@@ -155,7 +157,7 @@ public class DiscordPlatformConnection
                         @Override
                         public void onGuildAvailable(GuildAvailableEvent event) {
                             try {
-                                createGuildConnection(event.getGuild()).register();
+                                getGuildConnection(event.getGuild()).register();
                             } catch (Throwable e) {
                                 plugin.getLogger().log(Level.WARNING, "Problem registering guild connection", e);
                             }
@@ -278,6 +280,10 @@ public class DiscordPlatformConnection
         );
     }
 
+    public List<DiscordGuildConnection> getGuildConnections() {
+        return new ArrayList<>(guildConnections.values());
+    }
+
     private class DiscordAudioConnection extends AbstractAudioConnection {
         private DiscordAudioConnection(Audio audio) {
             super(audio);
@@ -285,10 +291,15 @@ public class DiscordPlatformConnection
 
         @Override
         public AudioChannel getChannel(Chat chat) {
-            if (chat instanceof Channel)
-                return getGuildConnection(((Channel) chat).getGuild()).getAudioChannel();
-            else
-                return null;
+            if (chat instanceof DiscordGuildChannel) {
+                DiscordGuildConnection connection = ((DiscordGuildChannel) chat).getGuildConnection();
+
+                if (connection == null || !connection.isRegistered()) {
+                    return null;
+                }
+
+                return connection.getAudioChannel();
+            } else return null;
         }
 
         @Override
