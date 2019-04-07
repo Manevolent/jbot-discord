@@ -115,18 +115,20 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
                 }
 
                 // Create mixer around the sink and audio channel around the mixer
-                mixer = audio.createMixer(getId(), consumer -> {
-                    consumer.addDefaultFilters();
-                    consumer.setFormat(48000f, 2);
-                });
+                if (audio != null) {
+                    mixer = audio.createMixer(getId(), consumer -> {
+                        consumer.addDefaultFilters();
+                        consumer.setFormat(48000f, 2);
+                    });
 
-                mixer.addSink(mixerSink = new DiscordMixerSink(
-                        DiscordMixerSink.AUDIO_FORMAT,
-                        OpusParameters.fromPluginConfiguration(plugin),
-                        mixer.getBufferSize()
-                ));
+                    mixer.addSink(mixerSink = new DiscordMixerSink(
+                            DiscordMixerSink.AUDIO_FORMAT,
+                            OpusParameters.fromPluginConfiguration(plugin),
+                            mixer.getBufferSize()
+                    ));
 
-                audioConnection.registerChannel(channel = new DiscordAudioChannel(this, mixer, this));
+                    audioConnection.registerChannel(channel = new DiscordAudioChannel(this, mixer, this));
+                }
 
                 AudioManager audioManager = guild.getAudioManager();
 

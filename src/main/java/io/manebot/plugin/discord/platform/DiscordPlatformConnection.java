@@ -1,7 +1,7 @@
 package io.manebot.plugin.discord.platform;
 
 import io.manebot.chat.Chat;
-import io.manebot.database.Database;
+
 import io.manebot.platform.AbstractPlatformConnection;
 
 import io.manebot.platform.Platform;
@@ -33,7 +33,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import java.util.stream.Collectors;
 
 public class DiscordPlatformConnection
@@ -43,11 +43,11 @@ public class DiscordPlatformConnection
 
     private final Platform platform;
     private final Plugin plugin;
+    private final Audio audio;
     private final GuildManager guildManager;
 
     private final Map<String, DiscordGuildConnection> guildConnections = new LinkedHashMap<>();
 
-    private Audio audio;
     private JDA client;
 
     public DiscordPlatformConnection(Platform platform,
@@ -55,6 +55,7 @@ public class DiscordPlatformConnection
                                      Audio audio) {
         this.audioConnection = new DiscordAudioConnection(audio);
 
+        this.audio = audio;
         this.platform = platform;
         this.plugin = plugin;
         this.guildManager = plugin.getInstance(GuildManager.class);
@@ -223,7 +224,6 @@ public class DiscordPlatformConnection
     protected Chat loadChatById(String id) {
         return loadChat(client.getTextChannelById(id));
     }
-
 
     public DiscordPlatformUser getPlatformUser(User user) {
         return (DiscordPlatformUser) super.getCachedUserById(user.getId(), (key) -> loadUser(user));
