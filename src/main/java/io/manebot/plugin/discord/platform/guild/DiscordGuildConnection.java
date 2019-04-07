@@ -3,7 +3,8 @@ package io.manebot.plugin.discord.platform.guild;
 import io.manebot.conversation.Conversation;
 import io.manebot.platform.Platform;
 import io.manebot.plugin.Plugin;
-import io.manebot.plugin.audio.AudioPlugin;
+import io.manebot.plugin.audio.Audio;
+import io.manebot.plugin.audio.api.AudioConnection;
 import io.manebot.plugin.audio.channel.AudioChannel;
 import io.manebot.plugin.audio.channel.AudioChannelRegistrant;
 import io.manebot.plugin.audio.mixer.Mixer;
@@ -38,7 +39,8 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
     private final DiscordGuild guildModel;
     private final Guild guild;
     private final DiscordPlatformConnection connection;
-    private final AudioPlugin audioPlugin;
+    private final Audio audio;
+    private final io.manebot.plugin.audio.api.AudioConnection audioConnection;
     private final Object voiceConnectionLock = new Object();
 
     private final Object registerLock = new Object();
@@ -53,12 +55,15 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
                                   DiscordGuild guildModel,
                                   Guild guild,
                                   DiscordPlatformConnection platformConnection,
-                                  AudioPlugin audioPlugin) {
+                                  Audio audio,
+                                  AudioConnection audioConnection) {
         this.plugin = plugin;
         this.guildModel = guildModel;
         this.guild = guild;
         this.connection = platformConnection;
-        this.audioPlugin = audioPlugin;
+
+        this.audio = audio;
+        this.audioConnection = audioConnection;
     }
 
     public Platform getPlatform() {
@@ -94,30 +99,34 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
 
             // Initialize audio subsystem for this guild.
             if (guildModel.isMusicEnabled()) {
-                mixerSink = new DiscordMixerSink(
-                        DiscordMixerSink.AUDIO_FORMAT,
-                        OpusParameters.fromPluginConfiguration(plugin),
-                        audioPlugin.getBufferSize(DiscordMixerSink.AUDIO_FORMAT)
-                );
-
                 // Deconstruct audio system
                 if (channel != null) {
                     channel.disconnect();
 
-                    audioPlugin.unregisterChannel(channel);
+                    audioConnection.unregisterChannel(channel);
                     channel = null;
                 }
 
                 // Destroy any old mixers
                 if (mixer != null) {
                     mixer.setRunning(false);
-                    audioPlugin.unregisterMixer(mixer);
+                    audioConnection.unregisterMixer(mixer);
                     mixer = null;
                 }
 
                 // Create mixer around the sink and audio channel around the mixer
-                mixer = audioPlugin.createMixer("discord:" + getId(), mixerSink);
-                audioPlugin.registerChannel(channel = new DiscordAudioChannel(this, mixer, this));
+                mixer = audio.createMixer(getId(), consumer -> {
+                    consumer.addDefaultFilters();
+                    consumer.setFormat(48000f, 2);
+                });
+
+                mixer.addSink(mixerSink = new DiscordMixerSink(
+                        DiscordMixerSink.AUDIO_FORMAT,
+                        OpusParameters.fromPluginConfiguration(plugin),
+                        mixer.getBufferSize()
+                ));
+
+                audioConnection.registerChannel(channel = new DiscordAudioChannel(this, mixer, this));
 
                 AudioManager audioManager = guild.getAudioManager();
 
@@ -186,13 +195,13 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
                 if (channel != null) {
                     channel.disconnect();
 
-                    audioPlugin.unregisterChannel(channel);
+                    audioConnection.unregisterChannel(channel);
                     channel = null;
                 }
 
                 if (mixer != null) {
                     mixer.setRunning(false);
-                    audioPlugin.unregisterMixer(mixer);
+                    audioConnection.unregisterMixer(mixer);
                     mixer = null;
                 }
             } finally {

@@ -9,13 +9,15 @@ import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.Plugin;
 import io.manebot.plugin.PluginException;
 
-import io.manebot.plugin.audio.AudioPlugin;
+import io.manebot.plugin.audio.Audio;
+import io.manebot.plugin.audio.api.AbstractAudioConnection;
+import io.manebot.plugin.audio.api.AudioConnection;
+import io.manebot.plugin.audio.channel.AudioChannel;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 
 import io.manebot.plugin.discord.platform.chat.*;
 import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
 import io.manebot.plugin.discord.platform.guild.GuildManager;
-import io.manebot.user.UserRegistration;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
@@ -34,53 +36,61 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class DiscordPlatformConnection extends AbstractPlatformConnection {
-    private final Platform platform;
-    private final Plugin plugin, audio;
-    private final Database database;
+public class DiscordPlatformConnection
+        extends AbstractPlatformConnection {
 
+    private final AudioConnection audioConnection;
+
+    private final Platform platform;
+    private final Plugin plugin;
     private final GuildManager guildManager;
 
     private final Map<String, DiscordGuildConnection> guildConnections = new LinkedHashMap<>();
 
-    private AudioPlugin audioPlugin;
+    private Audio audio;
     private JDA client;
 
     public DiscordPlatformConnection(Platform platform,
                                      Plugin plugin,
-                                     Plugin audioPlugin,
-                                     Database database) {
+                                     Audio audio) {
+        this.audioConnection = new DiscordAudioConnection(audio);
+
         this.platform = platform;
         this.plugin = plugin;
         this.guildManager = plugin.getInstance(GuildManager.class);
-        this.audio = audioPlugin;
-
-        this.database = database;
     }
 
     public Platform getPlatform() {
         return platform;
     }
 
+    public Audio getAudio() {
+        return audio;
+    }
+
     private DiscordGuildConnection createGuildConnection(Guild connection) {
         DiscordGuild guild = guildManager.getOrCreateGuild(connection.getId());
-        return new DiscordGuildConnection(plugin, guild, connection, this, getAudioPlugin());
+        return new DiscordGuildConnection(plugin, guild, connection, this, audio, audioConnection);
     }
 
     private DiscordGuildConnection getGuildConnection(String id) {
         Guild guild = client.getGuildById(id);
         if (guild == null) throw new IllegalArgumentException("Unknown guild: " + id);
-        return guildConnections.computeIfAbsent(id, key -> createGuildConnection(guild));
+        return getGuildConnection(guild);
+    }
+
+    private DiscordGuildConnection getGuildConnection(Guild guild) {
+        return guildConnections.computeIfAbsent(guild.getId(), key -> createGuildConnection(guild));
+    }
+
+    public AudioConnection getAudioConnection() {
+        return audioConnection;
     }
 
     // Connect/Disconnect ==============================================================================================
 
     @Override
     public void connect() throws PluginException {
-        audioPlugin = audio.getInstance(AudioPlugin.class);
-
-        Logger.getLogger("discord4j.rest").setLevel(Level.FINEST);
-
         try {
             client = new JDABuilder(plugin.requireProperty("token"))
                     .useSharding(
@@ -268,7 +278,22 @@ public class DiscordPlatformConnection extends AbstractPlatformConnection {
         );
     }
 
-    public AudioPlugin getAudioPlugin() {
-        return audioPlugin;
+    private class DiscordAudioConnection extends AbstractAudioConnection {
+        private DiscordAudioConnection(Audio audio) {
+            super(audio);
+        }
+
+        @Override
+        public AudioChannel getChannel(Chat chat) {
+            if (chat instanceof Channel)
+                return getGuildConnection(((Channel) chat).getGuild()).getAudioChannel();
+            else
+                return null;
+        }
+
+        @Override
+        public boolean isConnected() {
+            return super.isConnected() && DiscordPlatformConnection.this.isConnected();
+        }
     }
 }
