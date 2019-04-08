@@ -29,7 +29,7 @@ public final class Entry implements PluginEntry {
         );
 
         // GuildManager database object manager
-        builder.setInstance(GuildManager.class, constructor -> new GuildManager(database));
+        builder.setInstance(GuildManager.class, plugin -> new GuildManager(database));
 
         // Set up Discord platform
         builder.addPlatform(platformBuilder -> {
@@ -37,7 +37,7 @@ public final class Entry implements PluginEntry {
 
             Plugin audioPlugin;
             try {
-                audioPlugin = builder.requirePlugin(ManifestIdentifier.fromString("io.manebot.plugin:audio"));
+                audioPlugin = builder.getPlugin(ManifestIdentifier.fromString("io.manebot.plugin:audio"));
             } catch (Throwable e) {
                 Virtual.getInstance().getLogger().log(Level.WARNING, "Failed to require audio plugin", e);
                 audioPlugin = null;
