@@ -8,7 +8,6 @@ import net.dv8tion.jda.core.audio.AudioSendHandler;
 import javax.sound.sampled.AudioFormat;
 
 public class DiscordMixerSink extends AbstractOpusMixerSink implements AudioSendHandler {
-
     public DiscordMixerSink(AudioFormat audioFormat,
                             OpusParameters opusParameters,
                             int bufferSizeInBytes) {
