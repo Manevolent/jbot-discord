@@ -18,7 +18,7 @@ import io.manebot.plugin.discord.database.model.DiscordGuild;
 import io.manebot.plugin.discord.platform.chat.*;
 import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
 import io.manebot.plugin.discord.platform.guild.GuildManager;
-import io.manebot.virtual.Virtual;
+import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
@@ -261,21 +261,21 @@ public class DiscordPlatformConnection
     }
 
     @Override
-    public Collection<String> getChatIds() {
-        return Collections.unmodifiableCollection(
-                client.getTextChannels()
-                        .stream()
-                        .map(ISnowflake::getId)
-                        .collect(Collectors.toList())
-        );
-    }
-
-    @Override
     public Collection<Chat> getChats() {
         return Collections.unmodifiableCollection(
                 client.getTextChannels()
                         .stream()
                         .map(this::getChat)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    @Override
+    public Collection<String> getChatIds() {
+        return Collections.unmodifiableCollection(
+                client.getTextChannels()
+                        .stream()
+                        .map(ISnowflake::getId)
                         .collect(Collectors.toList())
         );
     }

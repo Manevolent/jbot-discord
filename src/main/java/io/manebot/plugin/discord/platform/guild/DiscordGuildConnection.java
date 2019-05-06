@@ -11,8 +11,8 @@ import io.manebot.plugin.audio.channel.AudioChannelRegistrant;
 import io.manebot.plugin.audio.mixer.Mixer;
 import io.manebot.plugin.audio.opus.OpusParameters;
 import io.manebot.plugin.audio.player.AudioPlayer;
-import io.manebot.plugin.discord.audio.DiscordAudioChannel;
-import io.manebot.plugin.discord.audio.DiscordMixerSink;
+import io.manebot.plugin.discord.platform.audio.DiscordAudioChannel;
+import io.manebot.plugin.discord.platform.audio.DiscordMixerSink;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
 

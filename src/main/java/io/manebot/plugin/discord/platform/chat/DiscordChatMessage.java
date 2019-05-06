@@ -4,9 +4,8 @@ import io.manebot.chat.*;
 
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
-import io.manebot.plugin.discord.platform.DiscordPlatformUser;
+import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 
-import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 

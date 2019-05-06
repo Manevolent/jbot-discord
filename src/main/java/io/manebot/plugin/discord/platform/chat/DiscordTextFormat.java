@@ -4,7 +4,7 @@ import io.manebot.chat.Chat;
 import io.manebot.chat.TextFormat;
 import io.manebot.chat.TextStyle;
 import io.manebot.platform.PlatformUser;
-import io.manebot.plugin.discord.platform.DiscordPlatformUser;
+import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 
 import java.util.ArrayList;
 import java.util.EnumSet;

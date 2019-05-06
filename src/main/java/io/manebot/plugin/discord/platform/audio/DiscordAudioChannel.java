@@ -1,4 +1,4 @@
-package io.manebot.plugin.discord.audio;
+package io.manebot.plugin.discord.platform.audio;
 
 import io.manebot.conversation.Conversation;
 import io.manebot.platform.Platform;
@@ -6,7 +6,7 @@ import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.audio.channel.AudioChannel;
 import io.manebot.plugin.audio.channel.AudioChannelRegistrant;
 import io.manebot.plugin.audio.mixer.Mixer;
-import io.manebot.plugin.discord.platform.DiscordPlatformUser;
+import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
 import io.manebot.user.UserAssociation;
 import net.dv8tion.jda.core.entities.GuildVoiceState;

@@ -2,7 +2,7 @@ package io.manebot.plugin.discord.platform.chat;
 
 import io.manebot.chat.DefaultChatSender;
 
-import io.manebot.plugin.discord.platform.DiscordPlatformUser;
+import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 
 public class DiscordChatSender extends DefaultChatSender {
     private final DiscordPlatformUser user;
