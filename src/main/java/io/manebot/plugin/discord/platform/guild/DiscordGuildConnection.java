@@ -1,7 +1,10 @@
 package io.manebot.plugin.discord.platform.guild;
 
+import io.manebot.chat.Chat;
+import io.manebot.chat.Community;
 import io.manebot.conversation.Conversation;
 import io.manebot.platform.Platform;
+import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.Plugin;
 import io.manebot.plugin.PluginException;
 import io.manebot.plugin.audio.Audio;
@@ -25,17 +28,22 @@ import net.dv8tion.jda.core.audio.UserAudio;
 import net.dv8tion.jda.core.audio.hooks.ConnectionListener;
 import net.dv8tion.jda.core.audio.hooks.ConnectionStatus;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.ISnowflake;
+import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.managers.AudioManager;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
  * Represents a connection to a specific authorized Guild in Discord.
  */
-public class DiscordGuildConnection implements AudioChannelRegistrant {
+public class DiscordGuildConnection implements AudioChannelRegistrant, Community {
     private final Plugin plugin;
     private final DiscordGuild guildModel;
     private final Guild guild;
@@ -75,8 +83,53 @@ public class DiscordGuildConnection implements AudioChannelRegistrant {
         return connection.getPlatform();
     }
 
+    @Override
+    public Collection<String> getChatIds() {
+        return guild.getChannels().stream()
+                .filter(channel -> channel instanceof MessageChannel)
+                .map(ISnowflake::getId).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Chat> getChats() {
+        return guild.getChannels().stream()
+                .filter(channel -> channel instanceof MessageChannel)
+                .map(channel -> getPlatformConnection().getChat((MessageChannel) channel))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<String> getPlatformUserIds() {
+        return guild.getMembers().stream().map(member -> member.getUser().getId()).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<PlatformUser> getPlatformUsers() {
+        return guild.getMembers().stream()
+                .map(member -> getPlatformConnection().getPlatformUser(member.getUser()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Chat getDefaultChat() {
+        TextChannel defaultTextChannel = guild.getDefaultChannel();
+        if (defaultTextChannel == null) return null;
+        return getPlatformConnection().getChat(defaultTextChannel);
+    }
+
+    @Override
+    public boolean isConnected() {
+        return guild.isAvailable();
+    }
+
     public String getId() {
         return guild.getId();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Override
+    public void setName(String name) throws UnsupportedOperationException {
+        guild.getManager().setName(name);
     }
 
     public DiscordAudioChannel getAudioChannel() {

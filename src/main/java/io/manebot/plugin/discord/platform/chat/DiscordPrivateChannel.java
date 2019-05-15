@@ -1,6 +1,7 @@
 package io.manebot.plugin.discord.platform.chat;
 
 import io.manebot.chat.ChatMessage;
+import io.manebot.chat.Community;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
 import net.dv8tion.jda.core.entities.PrivateChannel;
@@ -47,6 +48,11 @@ public class DiscordPrivateChannel extends BaseDiscordChannel {
     @Override
     public void addMember(String s) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Community getCommunity() {
+        return null;
     }
 
     @Override

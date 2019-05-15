@@ -1,6 +1,7 @@
 package io.manebot.plugin.discord.platform.chat;
 
 import io.manebot.chat.Chat;
+import io.manebot.chat.Community;
 import io.manebot.chat.TextFormat;
 import io.manebot.chat.ChatMessage;
 import io.manebot.platform.Platform;

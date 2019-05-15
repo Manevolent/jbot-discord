@@ -2,6 +2,7 @@ package io.manebot.plugin.discord.platform;
 
 import io.manebot.chat.Chat;
 
+import io.manebot.chat.Community;
 import io.manebot.platform.AbstractPlatformConnection;
 
 import io.manebot.platform.Platform;
@@ -227,6 +228,11 @@ public class DiscordPlatformConnection
         return loadChat(client.getTextChannelById(id));
     }
 
+    @Override
+    protected Community loadCommunityById(String id) {
+        return guildConnections.get(id);
+    }
+
     public DiscordPlatformUser getPlatformUser(User user) {
         return (DiscordPlatformUser) super.getCachedUserById(user.getId(), (key) -> loadUser(user));
     }
@@ -278,6 +284,23 @@ public class DiscordPlatformConnection
                         .map(ISnowflake::getId)
                         .collect(Collectors.toList())
         );
+    }
+
+    @Override
+    public Collection<String> getCommunityIds() {
+        return Collections.unmodifiableCollection(
+                client.getGuilds()
+                        .stream()
+                        .map(ISnowflake::getId)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    @Override
+    public Collection<Community> getCommunities() {
+        return guildConnections.values()
+                .stream()
+                .map(connection -> (Community) connection).collect(Collectors.toList());
     }
 
     public List<DiscordGuildConnection> getGuildConnections() {
