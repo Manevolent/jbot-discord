@@ -5,6 +5,7 @@ import io.manebot.chat.TextFormat;
 import io.manebot.chat.TextStyle;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
+import io.manebot.user.UserAssociation;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -25,9 +26,15 @@ public final class DiscordTextFormat implements TextFormat {
 
     @Override
     public String mention(PlatformUser user) {
-        if (user instanceof DiscordPlatformUser)
-            return ((DiscordPlatformUser) user).getUser().getAsMention();
-        else
+        if (user instanceof DiscordPlatformUser) {
+            UserAssociation association = user.getAssociation();
+            if (association != null && !association.getUser().getDisplayName().equalsIgnoreCase(user.getNickname())) {
+                return ((DiscordPlatformUser) user).getUser().getAsMention()
+                        + " " + escape(association.getUser().getDisplayName());
+            } else {
+                return ((DiscordPlatformUser) user).getUser().getAsMention();
+            }
+        } else
             return TextFormat.super.mention(user);
     }
 

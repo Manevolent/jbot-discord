@@ -178,8 +178,8 @@ public class DiscordGuildConnection implements AudioChannelRegistrant, Community
         // Create mixer around the sink and audio channel around the mixer
         if (audio != null) {
             mixer = audioConnection.registerMixer(audio.createMixer(getId(), consumer -> {
-                consumer.addDefaultFilters();
                 consumer.setFormat(48000f, 2);
+                consumer.addDefaultFilters();
             }));
 
             mixer.addSink(mixerSink = new DiscordMixerSink(

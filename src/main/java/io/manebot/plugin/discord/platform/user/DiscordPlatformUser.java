@@ -5,6 +5,7 @@ import io.manebot.platform.Platform;
 import io.manebot.platform.PlatformConnection;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.entities.User;
 
@@ -40,7 +41,7 @@ public class DiscordPlatformUser implements PlatformUser {
 
     @Override
     public String getNickname() {
-        return user.getName();
+        return user.getName().split("\\#", 2)[0];
     }
 
     @Override
