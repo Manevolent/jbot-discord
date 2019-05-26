@@ -68,8 +68,8 @@ plugin autoremove
 
 The **Discord** plugin requires the following plugins at least be *installed*. Don't worry, if you don't have them installed, Manebot will automatically install them for you.
 
-* io.manebot.plugins:audio
-* io.manebot.plugins:media
+* io.manebot.plugin:audio
+* io.manebot.plugin:media
 
 ## Supported Features
 
@@ -81,5 +81,6 @@ This plugin supports the following essential Discord features:
 * *Markdown* text (bold, italics, inline or block code, underline, strikethrough, etc.)
 * Soft handling of unsupported API calls. Don't worry, if your plugins make an API call that Discord doesn't support, we'll do our best to handle it... or, in a "let's not, but say we did" kind of way, hide our embarassment 👀
 * Direct or private text channels
+* Guilds as Manebot "Communities"
 * Guild text channels
 * Guild voice channels via the **audio** plugin's AudioChannel system
