@@ -3,7 +3,7 @@
 <p align="center">
   <img height="128" src="https://github.com/Manevolent/manebot-discord/raw/master/manebot_loves_discord_spaced_centered.png">
   <br/>
-  <a href="https://discord.gg/qJPzQX3"><img height="28" src="https://img.shields.io/discord/563010101254815776.svg?label=Discord&logo=discord&style=for-the-badge"></a> <img height="28" src="https://img.shields.io/github/issues/manevolent/manebot-discord.svg?style=for-the-badge">
+  <a href="https://discord.gg/qJPzQX3"><img height="28" src="https://img.shields.io/discord/563010101254815776.svg?label=Discord&logo=discord&style=for-the-badge"></a> <img height="28" src="https://img.shields.io/github/issues/manebot/discord.svg?style=for-the-badge">
 </p>
 
 This is the reference implementation of the **Discord** platform for **Manebot**, my multi-platform (where platform means chat platform) chatbot framework. You can use this plugin to get Manebot to interact with Discord. The integration is completely seamless; simply install the Discord plugin to Manebot, associate it with a bot user, and watch your existing plugins/features auto-magically work on the Discord platform!
