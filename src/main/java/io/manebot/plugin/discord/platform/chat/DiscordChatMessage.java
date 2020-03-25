@@ -49,7 +49,7 @@ public class DiscordChatMessage extends AbstractChatMessage {
 
     @Override
     public String getMessage() {
-        return message.getContentStripped();
+        return message.getContentDisplay();
     }
 
     @Override

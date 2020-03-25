@@ -44,7 +44,7 @@
 
     <groupId>io.manebot.plugin</groupId>
     <artifactId>discord</artifactId>
-    <version>0.1.2.20-SNAPSHOT</version>
+    <version>0.1.2.21-SNAPSHOT</version>
 
     <properties>
         <jda.version>3.8.3</jda.version>
@@ -112,6 +112,12 @@
                     <artifactId>opus-java</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
