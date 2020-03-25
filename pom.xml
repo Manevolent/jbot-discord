@@ -6,23 +6,6 @@
 
     <repositories>
         <repository>
-            <id>public</id>
-            <name>Team Lixo public release repository</name>
-            <url>https://maven.teamlixo.net/repository/public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>jcenter</id>
-            <name>jcenter-bintray</name>
-            <url>http://jcenter.bintray.com</url>
-        </repository>
-        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
@@ -31,28 +14,40 @@
             <name>tomp2p</name>
             <url>http://tomp2p.net/dev/mvn/</url>
         </repository>
+        <repository>
+            <id>public</id>
+            <name>Manebot public release repository</name>
+            <url>https://repo.manebot.io/repository/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
     </repositories>
 
     <distributionManagement>
         <repository>
             <id>public-releases</id>
-            <name>Team Lixo public release repository</name>
-            <url>https://maven.teamlixo.net/repository/public-releases/</url>
+            <name>Manebot public release repository</name>
+            <url>https://repo.manebot.io/repository/public-releases/</url>
             <uniqueVersion>true</uniqueVersion>
         </repository>
         <snapshotRepository>
             <id>public-snapshots</id>
-            <name>Team Lixo public release snapshots</name>
-            <url>https://maven.teamlixo.net/repository/public-snapshots/</url>
+            <name>Manebot public release snapshots</name>
+            <url>https://repo.manebot.io/repository/public-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
     <groupId>io.manebot.plugin</groupId>
     <artifactId>discord</artifactId>
-    <version>0.1.2.19</version>
+    <version>0.1.2.20-SNAPSHOT</version>
 
     <properties>
-        <jda.version>3.8.3_462</jda.version>
+        <jda.version>3.8.3</jda.version>
     </properties>
 
     <build>
@@ -108,7 +103,7 @@
         </dependency>
 
         <dependency>
-            <groupId>net.dv8tion</groupId>
+            <groupId>com.github.DV8FromTheWorld</groupId>
             <artifactId>JDA</artifactId>
             <version>${jda.version}</version>
             <exclusions>
