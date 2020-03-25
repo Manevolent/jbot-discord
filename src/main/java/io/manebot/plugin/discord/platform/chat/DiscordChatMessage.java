@@ -6,8 +6,8 @@ import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
 import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.awt.*;
 import java.net.MalformedURLException;
@@ -27,7 +27,7 @@ public class DiscordChatMessage extends AbstractChatMessage {
     public DiscordChatMessage(DiscordPlatformConnection connection,
                               DiscordChatSender sender,
                               Message message) {
-        super(sender, Date.from(message.getCreationTime().toInstant()));
+        super(sender, Date.from(message.getTimeCreated().toInstant()));
 
         this.sender = sender;
         this.connection = connection;
@@ -69,7 +69,7 @@ public class DiscordChatMessage extends AbstractChatMessage {
 
     @Override
     public ChatMessage edit(Consumer<Builder> function) {
-        net.dv8tion.jda.core.MessageBuilder builder = new net.dv8tion.jda.core.MessageBuilder();
+        net.dv8tion.jda.api.MessageBuilder builder = new net.dv8tion.jda.api.MessageBuilder();
         function.accept(new MessageBuilder(getSender().getPlatformUser(), getSender().getChat(), builder));
         Message editedMessage = message.editMessage(builder.build()).complete();
         return new DiscordChatMessage(connection, sender, editedMessage);
@@ -82,7 +82,7 @@ public class DiscordChatMessage extends AbstractChatMessage {
 
     @Override
     public java.util.Date getEditedDate() {
-        return wasEdited() ? Date.from(message.getEditedTime().toInstant()) : null;
+        return wasEdited() ? Date.from(message.getTimeEdited().toInstant()) : null;
     }
 
     private static class ChatEmbed implements io.manebot.chat.ChatEmbed {
@@ -138,9 +138,9 @@ public class DiscordChatMessage extends AbstractChatMessage {
      */
     public static class EmbedBuilder implements io.manebot.chat.ChatEmbed.Builder {
         private final Chat chat;
-        private final net.dv8tion.jda.core.EmbedBuilder builder;
+        private final net.dv8tion.jda.api.EmbedBuilder builder;
 
-        public EmbedBuilder(Chat chat, net.dv8tion.jda.core.EmbedBuilder builder) {
+        public EmbedBuilder(Chat chat, net.dv8tion.jda.api.EmbedBuilder builder) {
             this.chat = chat;
             this.builder = builder;
         }
@@ -244,12 +244,12 @@ public class DiscordChatMessage extends AbstractChatMessage {
         private final DiscordPlatformUser user;
         private final BaseDiscordChannel channel;
 
-        private final net.dv8tion.jda.core.MessageBuilder builder;
+        private final net.dv8tion.jda.api.MessageBuilder builder;
         private boolean builtEmbed = false;
 
         public MessageBuilder(DiscordPlatformUser user,
                               BaseDiscordChannel channel,
-                              net.dv8tion.jda.core.MessageBuilder builder) {
+                              net.dv8tion.jda.api.MessageBuilder builder) {
             this.user = user;
             this.channel = channel;
             this.builder = builder;
@@ -277,7 +277,7 @@ public class DiscordChatMessage extends AbstractChatMessage {
             if (this.builtEmbed)
                 throw new IllegalStateException("Embed already defined; Discord only accepts one embed per message");
 
-            net.dv8tion.jda.core.EmbedBuilder builder = new net.dv8tion.jda.core.EmbedBuilder();
+            net.dv8tion.jda.api.EmbedBuilder builder = new net.dv8tion.jda.api.EmbedBuilder();
             function.accept(new EmbedBuilder(channel, builder));
             this.builder.setEmbed(builder.build());
 

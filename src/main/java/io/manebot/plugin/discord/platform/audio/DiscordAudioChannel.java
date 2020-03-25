@@ -9,10 +9,10 @@ import io.manebot.plugin.audio.mixer.Mixer;
 import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
 import io.manebot.user.UserAssociation;
-import net.dv8tion.jda.core.entities.GuildVoiceState;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import net.dv8tion.jda.core.managers.AudioManager;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.Collections;
 import java.util.List;

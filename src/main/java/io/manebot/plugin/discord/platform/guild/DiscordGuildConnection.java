@@ -22,16 +22,16 @@ import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
 import io.manebot.user.User;
 import io.manebot.user.UserAssociation;
 import io.manebot.virtual.Virtual;
-import net.dv8tion.jda.core.audio.AudioReceiveHandler;
-import net.dv8tion.jda.core.audio.CombinedAudio;
-import net.dv8tion.jda.core.audio.UserAudio;
-import net.dv8tion.jda.core.audio.hooks.ConnectionListener;
-import net.dv8tion.jda.core.audio.hooks.ConnectionStatus;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.ISnowflake;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.managers.AudioManager;
+import net.dv8tion.jda.api.audio.AudioReceiveHandler;
+import net.dv8tion.jda.api.audio.CombinedAudio;
+import net.dv8tion.jda.api.audio.UserAudio;
+import net.dv8tion.jda.api.audio.hooks.ConnectionListener;
+import net.dv8tion.jda.api.audio.hooks.ConnectionStatus;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -205,7 +205,7 @@ public class DiscordGuildConnection implements AudioChannelRegistrant, Community
                 }
 
                 @Override
-                public void onUserSpeaking(net.dv8tion.jda.core.entities.User user, boolean speaking) {
+                public void onUserSpeaking(net.dv8tion.jda.api.entities.User user, boolean speaking) {
 
                 }
             });

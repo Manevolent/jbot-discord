@@ -3,9 +3,10 @@ package io.manebot.plugin.discord.platform.audio;
 import io.manebot.plugin.audio.mixer.output.AbstractOpusMixerSink;
 import io.manebot.plugin.audio.opus.OpusParameters;
 
-import net.dv8tion.jda.core.audio.AudioSendHandler;
+import net.dv8tion.jda.api.audio.AudioSendHandler;
 
 import javax.sound.sampled.AudioFormat;
+import java.nio.ByteBuffer;
 
 public class DiscordMixerSink extends AbstractOpusMixerSink implements AudioSendHandler {
     public DiscordMixerSink(AudioFormat audioFormat,
@@ -20,8 +21,8 @@ public class DiscordMixerSink extends AbstractOpusMixerSink implements AudioSend
     }
 
     @Override
-    public byte[] provide20MsAudio() {
-        return DiscordMixerSink.this.provide();
+    public ByteBuffer provide20MsAudio() {
+        return ByteBuffer.wrap(DiscordMixerSink.this.provide());
     }
 
     @Override

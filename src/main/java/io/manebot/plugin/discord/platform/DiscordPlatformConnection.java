@@ -20,14 +20,15 @@ import io.manebot.plugin.discord.platform.chat.*;
 import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
 import io.manebot.plugin.discord.platform.guild.GuildManager;
 import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.ReadyEvent;
-import net.dv8tion.jda.core.events.guild.GuildAvailableEvent;
-import net.dv8tion.jda.core.events.guild.GuildUnavailableEvent;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.ExceptionEvent;
+import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.guild.GuildAvailableEvent;
+import net.dv8tion.jda.api.events.guild.GuildUnavailableEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
@@ -102,13 +103,10 @@ public class DiscordPlatformConnection
                             Integer.parseInt(plugin.getProperty("totalShards", "1"))
                     )
                     .setCallbackPool(Executors.newCachedThreadPool(), true)
-                    .setAudioEnabled(Boolean.parseBoolean(plugin.getProperty("audio", "true")))
                     .setAutoReconnect(Boolean.parseBoolean(plugin.getProperty("autoReconnect", "true")))
-                    .setCorePoolSize(Integer.parseInt(plugin.getProperty("poolSize", "5")))
                     .setMaxReconnectDelay(Integer.parseInt(plugin.getProperty("maxReconnectDelay", "900")))
                     .setIdle(Boolean.parseBoolean(plugin.getProperty("idle", "false")))
-                    .setCompressionEnabled(Boolean.parseBoolean(plugin.getProperty("compression", "true")))
-                    .addEventListener(new ListenerAdapter() {
+                    .addEventListeners(new ListenerAdapter() {
                         @Override
                         public void onReady(ReadyEvent event) {
                             for (Guild guild : event.getJDA().getGuilds()) {
@@ -172,6 +170,11 @@ public class DiscordPlatformConnection
                             } catch (Throwable e) {
                                 plugin.getLogger().log(Level.WARNING, "Problem unregistering guild connection", e);
                             }
+                        }
+
+                        @Override
+                        public void onException(ExceptionEvent event) {
+                            plugin.getLogger().log(Level.WARNING, "Problem occurred in JDA", event.getCause());
                         }
                     })
                     .build()

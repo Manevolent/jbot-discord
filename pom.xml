@@ -47,7 +47,7 @@
     <version>0.1.2.21-SNAPSHOT</version>
 
     <properties>
-        <jda.version>3.8.3</jda.version>
+        <jda.version>v4.1.1</jda.version>
     </properties>
 
     <build>

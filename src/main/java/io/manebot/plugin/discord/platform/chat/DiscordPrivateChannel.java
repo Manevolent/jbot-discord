@@ -4,7 +4,7 @@ import io.manebot.chat.ChatMessage;
 import io.manebot.chat.Community;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
-import net.dv8tion.jda.core.entities.PrivateChannel;
+import net.dv8tion.jda.api.entities.PrivateChannel;
 
 import java.util.Arrays;
 import java.util.Collection;

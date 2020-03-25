@@ -4,7 +4,7 @@ import io.manebot.chat.Community;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
 import io.manebot.plugin.discord.platform.guild.DiscordGuildConnection;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.Collection;
 import java.util.stream.Collectors;

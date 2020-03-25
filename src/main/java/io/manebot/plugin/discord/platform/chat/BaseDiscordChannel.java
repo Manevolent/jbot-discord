@@ -6,9 +6,9 @@ import io.manebot.chat.TextFormat;
 import io.manebot.chat.ChatMessage;
 import io.manebot.platform.Platform;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageChannel;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -55,7 +55,7 @@ public abstract class BaseDiscordChannel implements Chat {
 
     @Override
     public Collection<ChatMessage> sendMessage(Consumer<ChatMessage.Builder> consumer) {
-        net.dv8tion.jda.core.MessageBuilder builder = new net.dv8tion.jda.core.MessageBuilder();
+        net.dv8tion.jda.api.MessageBuilder builder = new net.dv8tion.jda.api.MessageBuilder();
         consumer.accept(new DiscordChatMessage.MessageBuilder(getPlatformConnection().getSelf(), this, builder));
         Message createdMessage = channel.sendMessage(builder.build()).complete();
 
