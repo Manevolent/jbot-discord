@@ -24,6 +24,7 @@ import io.manebot.user.UserAssociation;
 import io.manebot.virtual.Virtual;
 import net.dv8tion.jda.api.audio.AudioReceiveHandler;
 import net.dv8tion.jda.api.audio.CombinedAudio;
+import net.dv8tion.jda.api.audio.OpusPacket;
 import net.dv8tion.jda.api.audio.UserAudio;
 import net.dv8tion.jda.api.audio.hooks.ConnectionListener;
 import net.dv8tion.jda.api.audio.hooks.ConnectionStatus;
@@ -206,7 +207,7 @@ public class DiscordGuildConnection implements AudioChannelRegistrant, Community
 
                 @Override
                 public void onUserSpeaking(net.dv8tion.jda.api.entities.User user, boolean speaking) {
-
+                    //TODO
                 }
             });
 
@@ -217,17 +218,22 @@ public class DiscordGuildConnection implements AudioChannelRegistrant, Community
                 }
 
                 @Override
-                public boolean canReceiveUser() {
-                    return true;
-                }
-
-                @Override
                 public void handleCombinedAudio(CombinedAudio combinedAudio) {
                     throw new UnsupportedOperationException();
                 }
 
                 @Override
-                public void handleUserAudio(UserAudio userAudio) {
+                public boolean canReceiveUser() {
+                    return false;
+                }
+
+                @Override
+                public boolean canReceiveEncoded() {
+                    return true;
+                }
+
+                @Override
+                public void handleEncodedAudio(OpusPacket opusPacket) {
                     //TODO
                 }
             });
@@ -287,11 +293,19 @@ public class DiscordGuildConnection implements AudioChannelRegistrant, Community
     }
 
     private Sleeper schedule() {
-        return schedule(guildModel.getIdleTimeout() * 1000);
+        int timeout = guildModel.getIdleTimeout();
+
+        if (timeout <= 0) {
+            return null;
+        }
+
+        return schedule(timeout * 1000);
     }
 
     private Sleeper schedule(long millis) {
-        if (sleeper != null && !sleeper.isDone()) sleeper.cancel();
+        if (sleeper != null && !sleeper.isDone()) {
+            sleeper.cancel();
+        }
 
         Virtual.getInstance()
                 .create(sleeper = new Sleeper(System.currentTimeMillis() + millis))
@@ -344,7 +358,6 @@ public class DiscordGuildConnection implements AudioChannelRegistrant, Community
         schedule();
     }
 
-
     private class Sleeper implements Runnable {
         private final long sleepTime;
         private final Object lock = new Object();
@@ -367,7 +380,12 @@ public class DiscordGuildConnection implements AudioChannelRegistrant, Community
                     }
                 }
 
-                if (channel != null && !cancel && channel.getState() == AudioChannel.State.WAITING)
+                if (cancel) {
+                    done = true;
+                    return;
+                }
+
+                if (channel != null && channel.getState() == AudioChannel.State.WAITING)
                     channel.setIdle(true);
 
                 sleeper = null;

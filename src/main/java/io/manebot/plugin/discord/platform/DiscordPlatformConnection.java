@@ -3,6 +3,7 @@ package io.manebot.plugin.discord.platform;
 import io.manebot.chat.Chat;
 
 import io.manebot.chat.Community;
+import io.manebot.event.Event;
 import io.manebot.platform.AbstractPlatformConnection;
 
 import io.manebot.platform.Platform;
@@ -14,6 +15,8 @@ import io.manebot.plugin.audio.Audio;
 import io.manebot.plugin.audio.api.AbstractAudioConnection;
 import io.manebot.plugin.audio.api.AudioConnection;
 import io.manebot.plugin.audio.channel.AudioChannel;
+import io.manebot.plugin.audio.event.channel.AudioChannelUserJoinEvent;
+import io.manebot.plugin.audio.event.channel.AudioChannelUserLeaveEvent;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 
 import io.manebot.plugin.discord.platform.chat.*;
@@ -27,6 +30,8 @@ import net.dv8tion.jda.api.events.ExceptionEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildAvailableEvent;
 import net.dv8tion.jda.api.events.guild.GuildUnavailableEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -134,8 +139,7 @@ public class DiscordPlatformConnection
 
                                 if (author.isBot()) return;
 
-                                DiscordPlatformUser user = (DiscordPlatformUser)
-                                        getPlatformUser(author.getId());
+                                DiscordPlatformUser user = getPlatformUser(author);
 
                                 BaseDiscordChannel chat = getChat(event.getMessage().getChannel());
 
@@ -169,6 +173,32 @@ public class DiscordPlatformConnection
                                 if (connection != null) connection.unregister();
                             } catch (Throwable e) {
                                 plugin.getLogger().log(Level.WARNING, "Problem unregistering guild connection", e);
+                            }
+                        }
+
+                        @Override
+                        public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
+                            DiscordGuildConnection guildConnection = getGuildConnection(event.getGuild());
+                            GuildVoiceState voiceState = event.getVoiceState();
+                            AudioChannel channel = guildConnection.getAudioChannel();
+                            PlatformUser platformUser = getPlatformUser(event.getMember().getUser());
+
+                            if (event.getChannelJoined().equals(voiceState.getChannel())) {
+                                platform.getPlugin().getBot().getEventDispatcher()
+                                        .executeAsync(new AudioChannelUserJoinEvent(this, audio, channel, platformUser));
+                            }
+                        }
+
+                        @Override
+                        public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
+                            DiscordGuildConnection guildConnection = getGuildConnection(event.getGuild());
+                            GuildVoiceState voiceState = event.getVoiceState();
+                            AudioChannel channel = guildConnection.getAudioChannel();
+                            PlatformUser platformUser = getPlatformUser(event.getMember().getUser());
+
+                            if (event.getChannelLeft().equals(voiceState.getChannel())) {
+                                platform.getPlugin().getBot().getEventDispatcher()
+                                        .executeAsync(new AudioChannelUserLeaveEvent(this, audio, channel, platformUser));
                             }
                         }
 
