@@ -3,7 +3,6 @@ package io.manebot.plugin.discord.platform;
 import io.manebot.chat.Chat;
 
 import io.manebot.chat.Community;
-import io.manebot.event.Event;
 import io.manebot.platform.AbstractPlatformConnection;
 
 import io.manebot.platform.Platform;
@@ -15,8 +14,9 @@ import io.manebot.plugin.audio.Audio;
 import io.manebot.plugin.audio.api.AbstractAudioConnection;
 import io.manebot.plugin.audio.api.AudioConnection;
 import io.manebot.plugin.audio.channel.AudioChannel;
-import io.manebot.plugin.audio.event.channel.AudioChannelUserJoinEvent;
-import io.manebot.plugin.audio.event.channel.AudioChannelUserLeaveEvent;
+import io.manebot.plugin.audio.event.channel.AudioChannelUserConnectedEvent;
+import io.manebot.plugin.audio.event.channel.AudioChannelUserDisconnectedEvent;
+import io.manebot.plugin.audio.event.channel.AudioChannelUserMoveEvent;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 
 import io.manebot.plugin.discord.platform.chat.*;
@@ -32,8 +32,10 @@ import net.dv8tion.jda.api.events.guild.GuildAvailableEvent;
 import net.dv8tion.jda.api.events.guild.GuildUnavailableEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
@@ -113,7 +115,7 @@ public class DiscordPlatformConnection
                     .setIdle(Boolean.parseBoolean(plugin.getProperty("idle", "false")))
                     .addEventListeners(new ListenerAdapter() {
                         @Override
-                        public void onReady(ReadyEvent event) {
+                        public void onReady(@NotNull ReadyEvent event) {
                             for (Guild guild : event.getJDA().getGuilds()) {
                                 try {
                                     getGuildConnection(guild).register();
@@ -133,7 +135,7 @@ public class DiscordPlatformConnection
                         }
 
                         @Override
-                        public void onMessageReceived(MessageReceivedEvent event) {
+                        public void onMessageReceived(@NotNull MessageReceivedEvent event) {
                             try {
                                 User author = event.getMessage().getAuthor();
 
@@ -158,7 +160,7 @@ public class DiscordPlatformConnection
                         }
 
                         @Override
-                        public void onGuildAvailable(GuildAvailableEvent event) {
+                        public void onGuildAvailable(@NotNull GuildAvailableEvent event) {
                             try {
                                 getGuildConnection(event.getGuild()).register();
                             } catch (Throwable e) {
@@ -167,7 +169,7 @@ public class DiscordPlatformConnection
                         }
 
                         @Override
-                        public void onGuildUnavailable(GuildUnavailableEvent event) {
+                        public void onGuildUnavailable(@NotNull GuildUnavailableEvent event) {
                             try {
                                 DiscordGuildConnection connection = guildConnections.remove(event.getGuild().getId());
                                 if (connection != null) connection.unregister();
@@ -177,33 +179,76 @@ public class DiscordPlatformConnection
                         }
 
                         @Override
-                        public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
+                        public void onGuildVoiceJoin(@NotNull GuildVoiceJoinEvent event) {
                             DiscordGuildConnection guildConnection = getGuildConnection(event.getGuild());
-                            GuildVoiceState voiceState = event.getVoiceState();
+                            VoiceChannel connectedChannel = event.getGuild().getAudioManager().getConnectedChannel();
+                            VoiceChannel joinedChannel = event.getChannelJoined();
+
                             AudioChannel channel = guildConnection.getAudioChannel();
                             PlatformUser platformUser = getPlatformUser(event.getMember().getUser());
 
-                            if (event.getChannelJoined().equals(voiceState.getChannel())) {
-                                platform.getPlugin().getBot().getEventDispatcher()
-                                        .executeAsync(new AudioChannelUserJoinEvent(this, audio, channel, platformUser));
-                            }
+                            platform.getPlugin().getBot().getEventDispatcher()
+                                    .executeAsync(new AudioChannelUserConnectedEvent(
+                                            this,
+                                            audio,
+                                            channel,
+                                            platformUser,
+                                            connectedChannel != null
+                                                    && connectedChannel.getId().equals(joinedChannel.getId()),
+                                            () -> event.getGuild().getAudioManager()
+                                                    .openAudioConnection(event.getChannelJoined())
+                                    ));
                         }
 
                         @Override
-                        public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
+                        public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
                             DiscordGuildConnection guildConnection = getGuildConnection(event.getGuild());
-                            GuildVoiceState voiceState = event.getVoiceState();
+                            VoiceChannel connectedChannel = event.getGuild().getAudioManager().getConnectedChannel();
+                            VoiceChannel leftChannel = event.getChannelLeft();
+
                             AudioChannel channel = guildConnection.getAudioChannel();
                             PlatformUser platformUser = getPlatformUser(event.getMember().getUser());
 
-                            if (event.getChannelLeft().equals(voiceState.getChannel())) {
-                                platform.getPlugin().getBot().getEventDispatcher()
-                                        .executeAsync(new AudioChannelUserLeaveEvent(this, audio, channel, platformUser));
-                            }
+                            platform.getPlugin().getBot().getEventDispatcher()
+                                    .executeAsync(new AudioChannelUserDisconnectedEvent(
+                                            this,
+                                            audio,
+                                            channel,
+                                            platformUser,
+                                            connectedChannel != null
+                                                    && connectedChannel.getId().equals(leftChannel.getId())
+                                    ));
                         }
 
                         @Override
-                        public void onException(ExceptionEvent event) {
+                        public void onGuildVoiceMove(@NotNull GuildVoiceMoveEvent event) {
+                            DiscordGuildConnection guildConnection = getGuildConnection(event.getGuild());
+                            VoiceChannel connectedChannel = event.getGuild().getAudioManager().getConnectedChannel();
+
+                            AudioChannel channel = guildConnection.getAudioChannel();
+                            PlatformUser platformUser = getPlatformUser(event.getMember().getUser());
+
+                            boolean joined = connectedChannel != null
+                                    && connectedChannel.getId().equals(event.getChannelJoined().getId());
+                            boolean left = connectedChannel != null
+                                    && connectedChannel.getId().equals(event.getChannelLeft().getId());
+
+                            platform.getPlugin().getBot().getEventDispatcher()
+                                    .executeAsync(new AudioChannelUserMoveEvent(
+                                            this,
+                                            audio,
+                                            channel,
+                                            channel,
+                                            platformUser,
+                                            joined,
+                                            left,
+                                            () -> event.getGuild().getAudioManager()
+                                                    .openAudioConnection(event.getChannelJoined())
+                                    ));
+                        }
+
+                        @Override
+                        public void onException(@NotNull ExceptionEvent event) {
                             plugin.getLogger().log(Level.WARNING, "Problem occurred in JDA", event.getCause());
                         }
                     })
