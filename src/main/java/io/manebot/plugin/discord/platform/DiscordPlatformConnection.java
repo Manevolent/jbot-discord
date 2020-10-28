@@ -104,7 +104,7 @@ public class DiscordPlatformConnection
     @Override
     public void connect() throws PluginException {
         try {
-            client = new JDABuilder(plugin.requireProperty("token"))
+            client = JDABuilder.createDefault(plugin.requireProperty("token"))
                     .useSharding(
                             Integer.parseInt(plugin.getProperty("shardId", "0")),
                             Integer.parseInt(plugin.getProperty("totalShards", "1"))

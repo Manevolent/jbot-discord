@@ -44,10 +44,10 @@
 
     <groupId>io.manebot.plugin</groupId>
     <artifactId>discord</artifactId>
-    <version>0.1.4</version>
+    <version>4.2.0.3</version>
 
     <properties>
-        <jda.version>v4.1.1</jda.version>
+        <jda.version>v4.2.0</jda.version>
     </properties>
 
     <build>
