@@ -87,7 +87,7 @@ public class DiscordPlatformConnection
 
     public DiscordGuildConnection getGuildConnection(String id) {
         Guild guild = client.getGuildById(id);
-        if (guild == null) throw new IllegalArgumentException("Unknown guild: " + id);
+        if (guild == null) throw new IllegalArgumentException("Unknown Discord guild: " + id);
         return getGuildConnection(guild);
     }
 
@@ -287,7 +287,12 @@ public class DiscordPlatformConnection
 
     @Override
     protected DiscordPlatformUser loadUserById(String id) {
-        return loadUser(client.getUserById(id));
+        User user = client.getUserById(id);
+        if (user == null) {
+            throw new IllegalArgumentException("Discord user not found: " + id);
+        }
+
+        return loadUser(user);
     }
 
     private Chat loadChat(MessageChannel channel) {
@@ -298,7 +303,7 @@ public class DiscordPlatformConnection
         } else if (channel instanceof PrivateChannel) {
             return new DiscordPrivateChannel(this, (PrivateChannel) channel);
         } else
-            throw new UnsupportedOperationException("Unsupported channel class: " + channel.getClass().getName());
+            throw new UnsupportedOperationException("Unsupported Discord channel class: " + channel.getClass().getName());
     }
 
     @Override
