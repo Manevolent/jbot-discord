@@ -35,6 +35,8 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.jetbrains.annotations.NotNull;
 
 import javax.security.auth.login.LoginException;
@@ -109,6 +111,8 @@ public class DiscordPlatformConnection
                             Integer.parseInt(plugin.getProperty("shardId", "0")),
                             Integer.parseInt(plugin.getProperty("totalShards", "1"))
                     )
+                    .setMemberCachePolicy(MemberCachePolicy.ALL)
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS)
                     .setCallbackPool(Executors.newCachedThreadPool(), true)
                     .setAutoReconnect(Boolean.parseBoolean(plugin.getProperty("autoReconnect", "true")))
                     .setMaxReconnectDelay(Integer.parseInt(plugin.getProperty("maxReconnectDelay", "900")))
@@ -162,6 +166,11 @@ public class DiscordPlatformConnection
                         @Override
                         public void onGuildAvailable(@NotNull GuildAvailableEvent event) {
                             try {
+                                event.getGuild().loadMembers().onError(throwable -> {
+                                    plugin.getLogger().log(Level.WARNING, "Problem loading Discord guild members",
+                                            throwable);
+                                });
+
                                 getGuildConnection(event.getGuild()).register();
                             } catch (Throwable e) {
                                 plugin.getLogger().log(Level.WARNING, "Problem registering guild connection", e);

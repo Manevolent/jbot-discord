@@ -55,8 +55,8 @@ public class DiscordGuildChannel extends BaseDiscordChannel {
     }
 
     @Override
-    public void setName(String s) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException();
+    public void setName(String name) throws UnsupportedOperationException {
+        channel.getManager().setName(name).submit();
     }
 
     @Override
