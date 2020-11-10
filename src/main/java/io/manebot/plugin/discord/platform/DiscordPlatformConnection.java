@@ -25,6 +25,7 @@ import io.manebot.plugin.discord.platform.guild.GuildManager;
 import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.ExceptionEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
@@ -37,6 +38,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.internal.utils.PermissionUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.security.auth.login.LoginException;
@@ -252,7 +254,12 @@ public class DiscordPlatformConnection
                                             joined,
                                             left,
                                             () -> event.getGuild().getAudioManager()
-                                                    .openAudioConnection(event.getChannelJoined())
+                                                    .openAudioConnection(event.getChannelJoined()),
+                                            PermissionUtil.checkPermission(
+                                                    event.getChannelJoined(),
+                                                    event.getGuild().getSelfMember(),
+                                                    Permission.VOICE_SPEAK
+                                            )
                                     ));
                         }
 

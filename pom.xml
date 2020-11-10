@@ -44,7 +44,7 @@
 
     <groupId>io.manebot.plugin</groupId>
     <artifactId>discord</artifactId>
-    <version>4.2.0.5</version>
+    <version>4.2.0.6</version>
 
     <properties>
         <jda.version>v4.2.0</jda.version>
@@ -74,7 +74,7 @@
         <dependency>
             <groupId>io.manebot.plugin</groupId>
             <artifactId>audio</artifactId>
-            <version>0.1.12</version>
+            <version>0.1.14</version>
             <scope>provided</scope>
         </dependency>
 
