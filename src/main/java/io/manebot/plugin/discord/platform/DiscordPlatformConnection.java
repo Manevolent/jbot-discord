@@ -304,7 +304,7 @@ public class DiscordPlatformConnection
 
     @Override
     protected DiscordPlatformUser loadUserById(String id) {
-        User user = client.getUserById(id);
+        User user = client.retrieveUserById(id).complete();
         if (user == null) {
             throw new IllegalArgumentException("Discord user not found: " + id);
         }
