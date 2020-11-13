@@ -255,7 +255,8 @@ public class DiscordPlatformConnection
                                             left,
                                             () -> event.getGuild().getAudioManager()
                                                     .openAudioConnection(event.getChannelJoined()),
-                                            !PermissionUtil.checkPermission(
+                                            event.getGuild().getAfkChannel().equals(event.getChannelJoined())
+                                            || !PermissionUtil.checkPermission(
                                                     event.getChannelJoined(),
                                                     event.getGuild().getSelfMember(),
                                                     Permission.VOICE_SPEAK

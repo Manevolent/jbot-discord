@@ -19,6 +19,7 @@ import io.manebot.plugin.discord.platform.audio.DiscordMixerSink;
 import io.manebot.plugin.discord.database.model.DiscordGuild;
 import io.manebot.plugin.discord.platform.DiscordPlatformConnection;
 
+import io.manebot.plugin.discord.platform.user.DiscordPlatformUser;
 import io.manebot.user.User;
 import io.manebot.user.UserAssociation;
 import io.manebot.virtual.Virtual;
@@ -81,6 +82,22 @@ public class DiscordGuildConnection implements AudioChannelRegistrant, Community
 
     public Platform getPlatform() {
         return connection.getPlatform();
+    }
+
+    @Override
+    public boolean isMember(User user) {
+        return user.getAssociations(getPlatform()).stream()
+                .map(UserAssociation::getPlatformUser)
+                .anyMatch(this::isMember);
+    }
+
+    @Override
+    public boolean isMember(PlatformUser user) {
+        if (user instanceof DiscordPlatformUser) {
+            return guild.isMember(((DiscordPlatformUser) user).getUser());
+        } else {
+            return false;
+        }
     }
 
     @Override
