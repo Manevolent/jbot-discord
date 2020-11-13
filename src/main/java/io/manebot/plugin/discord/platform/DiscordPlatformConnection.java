@@ -1,5 +1,6 @@
 package io.manebot.plugin.discord.platform;
 
+import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import io.manebot.chat.Chat;
 
 import io.manebot.chat.Community;
@@ -113,6 +114,7 @@ public class DiscordPlatformConnection
                             Integer.parseInt(plugin.getProperty("shardId", "0")),
                             Integer.parseInt(plugin.getProperty("totalShards", "1"))
                     )
+                    .setAudioSendFactory(new NativeAudioSendFactory())
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS)
                     .setCallbackPool(Executors.newCachedThreadPool(), true)
